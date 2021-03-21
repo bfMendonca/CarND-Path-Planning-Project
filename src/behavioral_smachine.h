@@ -11,9 +11,9 @@ using std::vector;
 class BehavioralSMachine {
 public:
 	enum States {
-		KL = 0x00,	//Lane change LEFT
+		KL = 0x00,	//Keep lane
 		PLC,		//Prepare to change 
-		LC			//Change lane left
+		LC			//Change lane
 	};
 
 	explicit BehavioralSMachine( const vector< double > &mx, const vector< double > &my,

@@ -122,7 +122,7 @@ bool PathPlanner::generatePath( const CarState &st, const Path &lastPath, double
 	  	newPath.y.push_back( lastPath.y[i] );
 	}
 
-	for( size_t i = 1; i <= 50 - lastPath.x.size(); ++i ) {
+	for( size_t i = 1; i <= pathSize - lastPath.x.size(); ++i ) {
 	  	double N = td/(targetSpeed*factor);
 	  	coord[0] = xStep + tx/N;
 	  	coord[1] = splineInterpol( coord[0] ) ;

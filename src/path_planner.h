@@ -93,10 +93,8 @@ class PathPlanner {
 public:
 	explicit PathPlanner( const vector<double> & mx, const vector<double> & my, const vector<double> & ms );
 	~PathPlanner();
-
  
 	bool generatePath( const CarState &st, const Path &lastPath, double targetD, double targetSpeed, Path &newPath );
-	bool generateLCPath( const CarState &st, const Path &lastPath, double targetD, double targetSpeed, Path &newPath );
 
 private:
 	//Maps "loaded from outside"
