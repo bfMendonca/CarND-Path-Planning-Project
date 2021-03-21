@@ -7,6 +7,8 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
 #include "json.hpp"
+#include "path_planner.h"
+#include "behavioral_smachine.h"
 
 // for convenience
 using nlohmann::json;
@@ -23,6 +25,11 @@ int main() {
   vector<double> map_waypoints_dx;
   vector<double> map_waypoints_dy;
 
+
+  //Creating class for handling path planning.
+  BehavioralSMachine planner( map_waypoints_x, map_waypoints_y, map_waypoints_s, map_waypoints_dx, map_waypoints_dy );
+
+
   // Waypoint map to read from
   string map_file_ = "../data/highway_map.csv";
   // The max s value before wrapping around the track back to 0
@@ -31,6 +38,7 @@ int main() {
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
 
   string line;
+
   while (getline(in_map_, line)) {
     std::istringstream iss(line);
     double x;
@@ -50,8 +58,10 @@ int main() {
     map_waypoints_dy.push_back(d_y);
   }
 
+
+
   h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
-               &map_waypoints_dx,&map_waypoints_dy]
+               &map_waypoints_dx,&map_waypoints_dy, &planner]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -59,7 +69,7 @@ int main() {
     // The 2 signifies a websocket event
     if (length && length > 2 && data[0] == '4' && data[1] == '2') {
 
-      auto s = hasData(data);
+      auto s = Utils::hasData(data);
 
       if (s != "") {
         auto j = json::parse(s);
@@ -90,17 +100,59 @@ int main() {
 
           json msgJson;
 
-          vector<double> next_x_vals;
-          vector<double> next_y_vals;
+          
 
           /**
            * TODO: define a path made up of (x,y) points that the car will visit
            *   sequentially every .02 seconds
            */
 
+          /*-- Adding the example code. ---*/
+          
+          Path previous_path;
+          previous_path.fromJSON( previous_path_x, previous_path_y );
 
-          msgJson["next_x"] = next_x_vals;
-          msgJson["next_y"] = next_y_vals;
+          //Let's verify if our current path has any trouble with vehicles
+
+          //std::cout << "Closest: " << car_s << " d: " << fmod( car_d, 4.0 ) << std::endl;
+          //vector< double > frenetCoord = getFrenet( car_x, car_y, map_waypoints_x, map_waypoints_y );
+
+          // double lastAddedX = ;
+          // double lastAddedY = ;
+          //std::vector< CarState > cars = Utils::getCarsState( sensor_fusion );
+
+          Path next_path;
+          CarState currentState( -1, car_x, car_y, car_speed, car_yaw, car_s, car_d );
+
+          vector< CarState > cars;
+          cars.reserve( sensor_fusion.size() );
+
+          for( size_t i = 0; i < sensor_fusion.size(); ++i ) {
+              int id =    sensor_fusion[i][0];
+              double x =  sensor_fusion[i][1];
+              double y =  sensor_fusion[i][2];
+              double vx = sensor_fusion[i][3];
+              double vy = sensor_fusion[i][4];
+              double s =  sensor_fusion[i][5];
+              double d =  sensor_fusion[i][6];
+
+              double speed = sqrt( vx*vx + vy*vy )*2.24;
+
+              cars.push_back( CarState( id, x, y, speed, 0.0, s, d ) );
+          }
+
+
+          next_path = planner.update( currentState, cars, previous_path );
+
+          //For testing, making a path to the same lane
+          bool planned = true;
+
+          if( planned ) {
+              msgJson["next_x"] = next_path.x;
+              msgJson["next_y"] = next_path.y;
+          }
+
+          /*-------------------------------*/
 
           auto msg = "42[\"control\","+ msgJson.dump()+"]";
 
