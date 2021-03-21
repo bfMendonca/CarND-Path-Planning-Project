@@ -41,3 +41,11 @@ As additional "helper" functions used, the "getCarsAtLane" method returns a vect
 
 Finally, in order to proper navigate through the environment, an speed controller was written in order to control the ego car's speed. If there are no cars ahead, it will accelerate untilt the MAX_SPEED, line 66, is reached, otherwise, it implements a simple "PD" controller wich will try to match the the speed of the vehicle ahead and maintain the distance defined by the "DESIRED_FOLLOWING_DISTANCE" constant, line 85.
 
+The "Keep Lane" state, method "klState(...)" will constantly verify the distance for the next vehicle and, when this value is smaller than "DISTANCE_TO_LANE_CHANGE", line 71, it will call the method "getLaneChangeCost" to verify which of the lateral lanes, if any, gives a better choice for lane changing. The lane with the higher score will be choose for "lane change" and the State Machine will then transit 
+to the "Prepare lane change" state, method "plcState(...)". 
+
+At the "PLC" state, the state machine will still plan to the current lane but, in addition, will generate a proposal path to lane change for the target desired lane. If a "valid" proposal path is found, then the state machine will transit to the lane change state "LC", method "lcState(...)" in which the generatePath is used with the target lane distance value and this lane changing path is return as the state machine output. Once the vehicle finished the lane changing behaviour, the state machine goes back to "keep lane" state. 
+
+
+
+
